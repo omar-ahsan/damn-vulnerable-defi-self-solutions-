@@ -22,10 +22,11 @@ contract NaiveReceiverLenderPool is ReentrancyGuard {
     }
 
     function flashLoan(address borrower, uint256 borrowAmount) external nonReentrant {
-        uint256 balanceBefore = address(this).balance;
+        uint256 balanceBefore = address(this).balance;                  
         if (balanceBefore < borrowAmount) revert NotEnoughETHInPool();
-        if (!borrower.isContract()) revert BorrowerMustBeADeployedContract();
-
+        if (!borrower.isContract()) revert BorrowerMustBeADeployedContract(); // @ctf No check for 0 borrowAmount, hence a contract can send 0 and recieve no loan but will still have
+                                                                              // pay the 1 ether fee
+                                                                              // @ctf There is no check to see if the contract which wants flashloan is being executed by its owner or not
         // Transfer ETH and handle control to receiver
         borrower.functionCallWithValue(abi.encodeWithSignature("receiveEther(uint256)", FIXED_FEE), borrowAmount);
 
