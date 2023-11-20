@@ -28,8 +28,8 @@ contract TrusterLenderPool is ReentrancyGuard {
         uint256 balanceBefore = damnValuableToken.balanceOf(address(this));
         if (balanceBefore < borrowAmount) revert NotEnoughTokensInPool();
 
-        damnValuableToken.transfer(borrower, borrowAmount);
-        target.functionCall(data);
+        damnValuableToken.transfer(borrower, borrowAmount); // no checks for 0 tokens
+        target.functionCall(data); // @ctf - the caller of this function controls both target and data, hence it can pass in a contract address with signatured data for approve
 
         uint256 balanceAfter = damnValuableToken.balanceOf(address(this));
         if (balanceAfter < balanceBefore) revert FlashLoanHasNotBeenPaidBack();
